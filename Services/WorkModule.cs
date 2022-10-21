@@ -12,19 +12,26 @@ namespace JiraWorkloadReportCreator
             _config = config;
         }
 
-        public List<(DateTime date, string author, double workTime, string comment, string taskId)> getAllLogFromJira()
+        public async Task<List<(DateTime date, string author, double workTime, string comment, string taskId)>> getAllLogFromJira()
         {
-            var result = new List<(DateTime,string,double,string,string)>();
-            foreach (var item in getTasks())
+            var result = new List<(DateTime, string, double, string, string)>();
+            var tasks = await getTasks();
+
+            var requests = tasks.Select(GetWorkloadFromTask);
+            var subResults = await Task.WhenAll(requests);
+            foreach (var workloads in subResults)
             {
-                string JiraUrl = String.Format(_config.JiraTaskUrl,_config.JiraUrl, item);
-               
-                var dict = GetAllWorkLogFromDynamic(GetRequest(JiraUrl));
-                result.AddRange(dict.Select(c => (c.Key.date, c.Key.author, c.Value.spendTime, c.Value.comment, item)));
+                result.AddRange(workloads);
             }
+           
             return result;
         }
-
+        private async Task<List<(DateTime date, string author, double workTime, string comment, string taskId)>>  GetWorkloadFromTask(string item)
+        {
+            string JiraUrl = String.Format(_config.JiraTaskUrl, _config.JiraUrl, item);
+            var dict = GetAllWorkLogFromDynamic(await GetRequest(JiraUrl));
+            return dict.Select(c => (c.Key.date, c.Key.author, c.Value.spendTime, c.Value.comment, item)).ToList();
+        }
         private Dictionary<(DateTime date, string author), (double spendTime, string comment)> GetAllWorkLogFromDynamic(dynamic json)
         {
             var tempList = new Dictionary<(DateTime date, string author), (double spendTime, string comment)>();
@@ -49,10 +56,15 @@ namespace JiraWorkloadReportCreator
             return tempList;
         }
 
-        public IEnumerable<string> getTasks()
+        public async Task<IEnumerable<string>> getTasks()
         {
-            var jiraUrlIssues = String.Format("{0}/rest/api/2/search?$select=issues",_config.JiraUrl);
-            var response = GetRequest(jiraUrlIssues);
+            var jiraUrlIssues = String.Format("{0}/rest/api/2/search?jql=createdDate>\"{1}\"", _config.JiraUrl, _config.ReportStartDate.ToString("yyyy-MM-dd"));
+            var response = await GetRequest(jiraUrlIssues);
+            return GetTasksFromResponse(response);
+        }
+
+        private IEnumerable<string> GetTasksFromResponse(string response)
+        {
             dynamic data = JsonConvert.DeserializeObject(response);
             foreach (var issue in data.issues)
             {
@@ -60,7 +72,7 @@ namespace JiraWorkloadReportCreator
             }
         }
 
-        private string GetRequest(string URL)
+        private async Task<string> GetRequest(string URL)
         {
             using var client = new HttpClient();
             string result = "";
@@ -68,7 +80,7 @@ namespace JiraWorkloadReportCreator
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(
                                                                                                     System.Text.ASCIIEncoding.ASCII.GetBytes(
                                                                                                        $"{_config.JiraLogin}:{_config.JiraToken}")));
-            var response = client.GetAsync(URL).Result;  // Blocking call! Program will wait here until a response is received or a timeout occurs.
+            var response = await client.GetAsync(URL); 
             try
             {
                 response.EnsureSuccessStatusCode();
@@ -78,7 +90,7 @@ namespace JiraWorkloadReportCreator
             }
             if (response.IsSuccessStatusCode)
             {
-                result = response.Content.ReadAsStringAsync().Result;  //Make sure to add a reference to System.Net.Http.Formatting.dll
+                result = await response.Content.ReadAsStringAsync();  //Make sure to add a reference to System.Net.Http.Formatting.dll
             }
             else
             {
