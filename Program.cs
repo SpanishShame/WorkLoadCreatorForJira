@@ -18,7 +18,8 @@ try
 List<Report> reportList = new List<Report>();
 try
 {
-    var jiraModule = new WorkModule(config);
+    using var client = new HttpClient();
+    var jiraModule = new WorkModule(client, config);
     reportList = (await jiraModule.getAllLogFromJira())
         .GroupBy(c => c.author).Select(x =>
                 new Report
@@ -47,7 +48,7 @@ catch (Exception e)
     Console.ReadKey();
     return;
 }
-Console.ForegroundColor= ConsoleColor.Green;
+Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine($"report was created in {Path.GetFullPath(config.ReportPath)}");
 Console.ReadLine();
 return;
