@@ -12,5 +12,6 @@ namespace JiraWorkloadReportCreator.Entity
         public string JiraLogin { get; set; }
         public string JiraToken { get; set; }
         public string ReportPath { get; set; }
+        public DateTime ReportStartDate { get; set; }
     }
 }
