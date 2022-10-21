@@ -58,7 +58,7 @@ namespace JiraWorkloadReportCreator
 
         public async Task<IEnumerable<string>> getTasks()
         {
-            var jiraUrlIssues = String.Format("{0}/rest/api/2/search?jql=createdDate>\"{1}\"", _config.JiraUrl, _config.ReportStartDate.ToString("yyyy-MM-dd"));
+            var jiraUrlIssues = String.Format(_config.JiraIssueUrl, _config.JiraUrl, _config.ReportStartDate.ToString("yyyy-MM-dd"));
             var response = await GetRequest(jiraUrlIssues);
             return GetTasksFromResponse(response);
         }
