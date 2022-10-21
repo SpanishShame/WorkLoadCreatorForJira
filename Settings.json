@@ -1,0 +1,7 @@
+{
+	"JiraUrl": "https://needtoChange.atlassian.net",
+	"JiraTaskUrl": "{0}/rest/api/2/issue/{1}/worklog",
+	"JiraLogin": "login_jira",
+	"JiraToken": "click and create your token https://id.atlassian.com/manage-profile/security/api-tokens",
+	"ReportPath": "groupReport.xlsx"
+}
