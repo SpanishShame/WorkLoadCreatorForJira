@@ -1,5 +1,7 @@
 # WorkLoadCreatorForJira
 
+simple code for create jira workload from cloud api.
+beware dirty code
 
 change settings.json.
 use build and run.
