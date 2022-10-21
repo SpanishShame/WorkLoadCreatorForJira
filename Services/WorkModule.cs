@@ -6,9 +6,11 @@ namespace JiraWorkloadReportCreator
 {
     public class WorkModule
     {
+        private readonly HttpClient _httpClient;
         private JiraConfig _config;
-        public WorkModule(JiraConfig config)
+        public WorkModule(HttpClient httpClient, JiraConfig config)
         {
+            _httpClient = httpClient;
             _config = config;
         }
 
@@ -74,28 +76,14 @@ namespace JiraWorkloadReportCreator
 
         private async Task<string> GetRequest(string URL)
         {
-            using var client = new HttpClient();
             string result = "";
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(
+            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(
                                                                                                     System.Text.ASCIIEncoding.ASCII.GetBytes(
                                                                                                        $"{_config.JiraLogin}:{_config.JiraToken}")));
-            var response = await client.GetAsync(URL); 
-            try
-            {
-                response.EnsureSuccessStatusCode();
-            }catch(Exception e)
-            {
-                Console.WriteLine($"Fail get request to jira:{e.Message}");
-            }
-            if (response.IsSuccessStatusCode)
-            {
-                result = await response.Content.ReadAsStringAsync();  //Make sure to add a reference to System.Net.Http.Formatting.dll
-            }
-            else
-            {
-                Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
-            }
+            var response = await _httpClient.GetAsync(URL); 
+            response.EnsureSuccessStatusCode();
+            result = await response.Content.ReadAsStringAsync();  //Make sure to add a reference to System.Net.Http.Formatting.dll
             return result;
         }
     }
