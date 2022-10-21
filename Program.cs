@@ -1,4 +1,4 @@
-﻿using JiraWorkloadReportCreator;
+using JiraWorkloadReportCreator;
 using JiraWorkloadReportCreator.Entity;
 using JiraWorkloadReportCreator.Helpers;
 using System.Text.Json;
@@ -19,8 +19,8 @@ List<Report> reportList = new List<Report>();
 try
 {
     var jiraModule = new WorkModule(config);
-    reportList = jiraModule.getAllLogFromJira()
-        .Where(c => c.date >= new DateTime(2022, 06, 13) && c.date <= new DateTime(2022, 07, 29)).GroupBy(c => c.author).Select(x =>
+    reportList = (await jiraModule.getAllLogFromJira())
+        .GroupBy(c => c.author).Select(x =>
                 new Report
                 {
                     Author = x.Key,
