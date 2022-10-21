@@ -9,6 +9,7 @@ namespace JiraWorkloadReportCreator.Entity
     {
         public string JiraUrl { get; set; }
         public string JiraTaskUrl { get; set; }
+        public string JiraIssueUrl { get; set; }
         public string JiraLogin { get; set; }
         public string JiraToken { get; set; }
         public string ReportPath { get; set; }
